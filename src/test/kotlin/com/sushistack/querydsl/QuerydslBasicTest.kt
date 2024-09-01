@@ -1,8 +1,8 @@
 package com.sushistack.querydsl
 
+import com.querydsl.core.QueryResults
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
-import com.sushistack.querydsl.entity.QMember
 import com.sushistack.querydsl.entity.QMember.*
 import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.annotation.Transactional
+
 
 @Transactional
 @SpringBootTest
@@ -81,5 +82,40 @@ class QuerydslBasicTest {
             .fetch()
 
         assertThat(result1.size).isEqualTo(1)
+    }
+
+    @Test
+    fun fetches() {
+
+        //List
+        val fetch: List<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .fetch()
+
+        //단 건
+        val findMember1: Member? = jpaQueryFactory
+            .selectFrom(member)
+            .fetchOne()
+
+        //처음 한 건 조회
+        val findMember2: Member? = jpaQueryFactory
+            .selectFrom(member)
+            .fetchFirst()
+
+        /* 개수 (deprecated)
+        val findCount: Long = jpaQueryFactory
+            .selectFrom(member)
+            .fetchCount()
+        */
+        val findCount: Long? = jpaQueryFactory
+            .select(member.count())
+            .from(member)
+            .fetchOne()
+
+        /* 페이징에서 사용 (deprecated)
+        val results: QueryResults<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .fetchResults()
+        */
     }
 }
