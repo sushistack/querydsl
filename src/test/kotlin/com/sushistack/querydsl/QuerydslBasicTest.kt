@@ -1,6 +1,5 @@
 package com.sushistack.querydsl
 
-import com.querydsl.core.QueryResults
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember.*
@@ -117,5 +116,28 @@ class QuerydslBasicTest {
             .selectFrom(member)
             .fetchResults()
         */
+    }
+
+    /**
+     * 회원 정렬 순서
+     * 1. 회원 나이 내림차순(desc)
+     * 2. 회원 이름 올림차순(asc)
+     * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)  */
+    @Test
+    fun sort() {
+        entityManager.persist(Member(username = null, age = 100))
+        entityManager.persist(Member(username = "member5", age = 100))
+        entityManager.persist(Member(username = "member6", age = 100))
+        val result: List<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .where(member.age.eq(100))
+            .orderBy(member.age.desc(), member.username.asc().nullsLast())
+            .fetch()
+        val member5 = result[0]
+        val member6 = result[1]
+        val memberNull = result[2]
+        assertThat(member5.username).isEqualTo("member5")
+        assertThat(member6.username).isEqualTo("member6")
+        assertThat(memberNull.username).isNull()
     }
 }
