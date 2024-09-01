@@ -1,5 +1,6 @@
 package com.sushistack.querydsl
 
+import com.querydsl.core.QueryResults
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember.*
@@ -139,5 +140,30 @@ class QuerydslBasicTest {
         assertThat(member5.username).isEqualTo("member5")
         assertThat(member6.username).isEqualTo("member6")
         assertThat(memberNull.username).isNull()
+    }
+
+    @Test
+    fun paging1() {
+        val result: List<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc()).offset(1) //0부터 시작(zero index) .limit(2) //최대 2건 조회
+            .fetch()
+
+        assertThat(result.size).isEqualTo(2)
+    }
+
+    @Test
+    fun paging2() {
+        val queryResults: QueryResults<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .orderBy(member.username.desc())
+            .offset(1)
+            .limit(2)
+            .fetchResults() // deprecated
+
+        assertThat(queryResults.total).isEqualTo(4)
+        assertThat(queryResults.limit).isEqualTo(2)
+        assertThat(queryResults.offset).isEqualTo(1)
+        assertThat(queryResults.results.size).isEqualTo(2)
     }
 }
