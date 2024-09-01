@@ -1,9 +1,11 @@
 package com.sushistack.querydsl
 
 import com.querydsl.core.QueryResults
+import com.querydsl.core.Tuple
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember.*
+import com.sushistack.querydsl.entity.QTeam.team
 import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -165,5 +167,59 @@ class QuerydslBasicTest {
         assertThat(queryResults.limit).isEqualTo(2)
         assertThat(queryResults.offset).isEqualTo(1)
         assertThat(queryResults.results.size).isEqualTo(2)
+    }
+
+    /**
+     * JPQL
+     * select
+     * COUNT(m),
+     * SUM(m.age),
+     * AVG(m.age),
+     * MAX(m.age),
+     * MIN(m.age)
+     * from Member m
+     */
+    //회원수 //나이 합 //평균 나이 //최대 나이 //최소 나이
+    @Test
+    @Throws(Exception::class)
+    fun aggregation() {
+        val result: List<Tuple> = jpaQueryFactory
+            .select(
+                member.count(),
+                member.age.sum(),
+                member.age.avg(),
+                member.age.max(),
+                member.age.min()
+            )
+            .from(member)
+            .fetch()
+
+        val tuple: Tuple = result[0]
+
+        assertThat(tuple.get(member.count())).isEqualTo(4)
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100)
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25.0)
+        assertThat(tuple.get(member.age.max())).isEqualTo(40)
+        assertThat(tuple.get(member.age.min())).isEqualTo(10)
+    }
+
+    /**
+     * 팀의 이름과 각 팀의 평균 연령을 구해라. */
+    @Test
+    @Throws(java.lang.Exception::class)
+    fun group() {
+        val result: List<Tuple> = jpaQueryFactory
+            .select(team.name, member.age.avg())
+            .from(member)
+            .join(member.team, team)
+            .groupBy(team.name)
+            .fetch()
+        val teamA = result[0]
+        val teamB = result[1]
+
+        assertThat(teamA.get(team.name)).isEqualTo("teamA")
+        assertThat(teamA.get(member.age.avg())).isEqualTo(15.0)
+        assertThat(teamB.get(team.name)).isEqualTo("teamB")
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35.0)
     }
 }
