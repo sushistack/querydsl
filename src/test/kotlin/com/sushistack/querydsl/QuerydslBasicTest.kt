@@ -5,6 +5,7 @@ import com.querydsl.core.Tuple
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember.*
+import com.sushistack.querydsl.entity.QTeam
 import com.sushistack.querydsl.entity.QTeam.team
 import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
@@ -222,4 +223,44 @@ class QuerydslBasicTest {
         assertThat(teamB.get(team.name)).isEqualTo("teamB")
         assertThat(teamB.get(member.age.avg())).isEqualTo(35.0)
     }
+
+    /**
+     * 팀 A에 소속된 모든 회원
+    */
+    @Test
+    @Throws(java.lang.Exception::class)
+    fun join() {
+        val result = jpaQueryFactory
+                .selectFrom(member)
+            .join(member.team, team)
+            .where(team.name.eq("teamA"))
+            .fetch()
+
+        assertThat(result)
+            .extracting("username")
+            .containsExactly("member1", "member2")
+    }
+
+
+    /**
+     * 세타 조인(연관관계가 없는 필드로 조인)
+     * 회원의 이름이 팀 이름과 같은 회원 조회
+     * SELECT FROM Member m, Team t
+     * CROSS JOIN, 카테시안 곱
+     * */
+    @Test
+    fun theta_join() {
+        entityManager.persist(Member (username = "teamA"))
+        entityManager.persist(Member (username = "teamB"))
+        val result = jpaQueryFactory
+            .select(member)
+            .from(member, team)
+            .where(member.username.eq(team.name))
+            .fetch()
+
+        assertThat(result)
+            .extracting("username")
+            .containsExactly("teamA", "teamB");
+    }
+
 }
