@@ -57,4 +57,29 @@ class QuerydslBasicTest {
 
         assertThat(member?.username).isEqualTo("member1")
     }
+
+    @Test
+    fun search() {
+        val member1 = jpaQueryFactory
+            .select(member)
+            .from(member)
+            .where(member.username.eq("member1").and(member.age.eq(10)))
+            .fetchOne()
+
+        assertThat(member1?.username).isEqualTo("member1")
+    }
+
+    @Test
+    fun searchAndParam() {
+        val result1 = jpaQueryFactory
+            .selectFrom(member)
+            .where(
+                // ...으로 모두 AND 조건으로 연결된다.
+                member.username.eq("member1"),
+                member.age.eq(10)
+            )
+            .fetch()
+
+        assertThat(result1.size).isEqualTo(1)
+    }
 }
