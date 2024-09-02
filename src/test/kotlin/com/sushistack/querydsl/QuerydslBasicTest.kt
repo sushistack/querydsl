@@ -472,4 +472,26 @@ class QuerydslBasicTest {
             .fetchOne()
             .let { println("tuple := $it") }
     }
+
+    @Test
+    fun simpleProjection() {
+        jpaQueryFactory
+            .select(member.username)
+            .from(member)
+            .fetch()
+            .forEach { println("tuple := $it") }
+    }
+
+    @Test
+    fun tupleProjection() {
+        jpaQueryFactory
+            .select(member.username, member.age)
+            .from(member)
+            .fetch()
+            .forEach {
+                println("tuple.get(member.username) := ${it.get(member.username)}, tuple.age := ${it.get(member.age)}")
+            }
+    }
+
+
 }
