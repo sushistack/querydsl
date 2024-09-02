@@ -23,6 +23,7 @@ import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.PersistenceUnit
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.from
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -644,4 +645,23 @@ class QuerydslBasicTest {
             .execute()
     }
 
+    @Test
+    fun sqlFunction() {
+        jpaQueryFactory
+            .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})", member.username, "member", "M"))
+            .from(member)
+            .fetch()
+            .forEach { println(it) }
+    }
+
+    @Test
+    fun sqlFunction2() {
+        jpaQueryFactory
+            .select(member.username)
+            .from(member)
+            //.where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+            .where(member.username.lower().eq(member.username.lower()))
+            .fetch()
+            .forEach { println(it) }
+    }
 }
