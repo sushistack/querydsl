@@ -1,6 +1,8 @@
 package com.sushistack.querydsl.dto
 
-data class MemberDTO(
+import com.querydsl.core.annotations.QueryProjection
+
+data class MemberDTO @QueryProjection constructor(
     var username: String = "",
     var age: Int = 0
 )

@@ -9,6 +9,7 @@ import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.dto.MemberDTO
+import com.sushistack.querydsl.dto.QMemberDTO
 import com.sushistack.querydsl.dto.UserDTO
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember
@@ -473,6 +474,7 @@ class QuerydslBasicTest {
         jpaQueryFactory
             .select(member.username.concat("_").concat(member.age.stringValue()))
             .from(member)
+            .where(member.id.eq(1))
             .fetchOne()
             .let { println("tuple := $it") }
     }
@@ -545,4 +547,20 @@ class QuerydslBasicTest {
 
         // not private, setter, default constructor
     }
+
+    /**
+     * Constructor 와의 차이는 compile time 에 에러를 잡을 수 있다는 점
+     * 고민점 ?=
+     * 1. Q 파일 생성...
+     * 2. querydsl 에 대한 의존성이 생긴다.
+     */
+    @Test
+    fun findDTOByQueryProjection() {
+        jpaQueryFactory
+            .select(QMemberDTO(member.username, member.age))
+            .from(member)
+            .fetch()
+            .forEach { println(it) }
+    }
+
 }
