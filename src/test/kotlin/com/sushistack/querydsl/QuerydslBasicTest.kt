@@ -8,6 +8,9 @@ import com.sushistack.querydsl.entity.QMember.*
 import com.sushistack.querydsl.entity.QTeam.team
 import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
+import jakarta.persistence.PersistenceContext
+import jakarta.persistence.PersistenceUnit
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -20,11 +23,14 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 class QuerydslBasicTest {
 
-    @Autowired
+    @PersistenceContext
     private lateinit var entityManager: EntityManager
 
     @Autowired
     private lateinit var jpaQueryFactory: JPAQueryFactory
+
+    @PersistenceUnit
+    private lateinit var entityManagerFactory: EntityManagerFactory
 
     @BeforeEach
     fun setup() {
@@ -97,6 +103,7 @@ class QuerydslBasicTest {
         //단 건
         val findMember1: Member? = jpaQueryFactory
             .selectFrom(member)
+            .where(member.id.eq(1))
             .fetchOne()
 
         //처음 한 건 조회
@@ -148,7 +155,8 @@ class QuerydslBasicTest {
     fun paging1() {
         val result: List<Member> = jpaQueryFactory
             .selectFrom(member)
-            .orderBy(member.username.desc()).offset(1) //0부터 시작(zero index) .limit(2) //최대 2건 조회
+            .orderBy(member.username.desc()).offset(1) //0부터 시작(zero index)
+            .limit(2) //최대 2건 조회
             .fetch()
 
         assertThat(result.size).isEqualTo(2)
@@ -299,5 +307,28 @@ class QuerydslBasicTest {
         for (tuple in result) {
             println("t=$tuple")
         }
+    }
+
+    @Test
+    fun fetchJoinNo() {
+        val mem = jpaQueryFactory
+            .selectFrom(member)
+            .where(member.username.eq("member1"))
+            .fetchOne()
+
+        val loaded = entityManagerFactory.persistenceUnitUtil.isLoaded(mem?.team)
+        assertThat(loaded).`as`("페치 조인 미적용").isFalse()
+    }
+
+    @Test
+    fun fetchJoined() {
+        val mem = jpaQueryFactory
+            .selectFrom(member)
+            .join(member.team, team).fetchJoin()
+            .where(member.username.eq("member1"))
+            .fetchOne()
+
+        val loaded = entityManagerFactory.persistenceUnitUtil.isLoaded(mem?.team)
+        assertThat(loaded).`as`("페치 조인 적용").isTrue()
     }
 }
