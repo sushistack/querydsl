@@ -1,5 +1,6 @@
 package com.sushistack.querydsl
 
+import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.ExpressionUtils
@@ -562,5 +563,22 @@ class QuerydslBasicTest {
             .fetch()
             .forEach { println(it) }
     }
+
+    @Test
+    fun dynamicQueryBooleanBuilder() {
+        val result = searchMember1("member1", 10)
+        assertThat(result.size).isEqualTo(1)
+    }
+
+    private fun searchMember1(usernameCond: String?, ageCond: Int?) =
+        BooleanBuilder().let { b ->
+            usernameCond?.let { b.and(member.username.eq(it)) }
+            ageCond?.let { b.and(member.age?.eq(it)) }
+
+            jpaQueryFactory
+                .selectFrom(member)
+                .where(b)
+                .fetch()
+        }
 
 }
