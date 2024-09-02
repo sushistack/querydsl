@@ -2,10 +2,14 @@ package com.sushistack.querydsl
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
+import com.querydsl.core.types.ExpressionUtils
+import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.sushistack.querydsl.dto.MemberDTO
+import com.sushistack.querydsl.dto.UserDTO
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember
 import com.sushistack.querydsl.entity.QMember.*
@@ -408,7 +412,7 @@ class QuerydslBasicTest {
 
     @Test
     fun caseStatement1() {
-        val result = jpaQueryFactory
+        jpaQueryFactory
             .select(
                 member.age
                     .`when`(10).then("열살")
@@ -493,5 +497,52 @@ class QuerydslBasicTest {
             }
     }
 
+    @Test
+    fun findDTOByJPQL() {
+        entityManager.createQuery("SELECT new com.sushistack.querydsl.dto.MemberDTO(m.username, m.age) FROM Member m", MemberDTO::class.java)
+            .resultList
+            .forEach { println(it) }
+    }
 
+    @Test
+    fun findDTOByQuerydslSetter() {
+        jpaQueryFactory
+            .select(Projections.bean(MemberDTO::class.java, member.username, member.age))
+            .from(member)
+            .fetch()
+            .forEach { println(it) }
+
+        // not private, setter, default constructor
+    }
+
+    @Test
+    fun findDTOByQuerydslConstructor() {
+        jpaQueryFactory
+            .select(Projections.constructor(MemberDTO::class.java, member.username, member.age))
+            .from(member)
+            .fetch()
+            .forEach { println(it) }
+    }
+
+    @Test
+    fun findUserDTO() {
+        val memberSub = QMember("memberSub")
+        jpaQueryFactory
+            .select(
+                Projections.fields(
+                    UserDTO::class.java,
+                    member.username.`as`("name"),
+                    // member.age
+                    ExpressionUtils.`as`(
+                        JPAExpressions.select(memberSub.age.max()).from(memberSub),
+                        "age"
+                    )
+                )
+            )
+            .from(member)
+            .fetch()
+            .forEach { println(it) }
+
+        // not private, setter, default constructor
+    }
 }
