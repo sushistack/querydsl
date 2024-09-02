@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.ExpressionUtils
-import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.CaseBuilder
@@ -28,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 
 
@@ -605,4 +605,43 @@ class QuerydslBasicTest {
     // composite 할 수 있다.
     private fun allEq(usernameCond: String?, ageCond: Int?): BooleanExpression? =
         usernameEq(usernameCond)?.and(ageEq(ageCond))
+
+    @Test
+    @Commit
+    fun bulkUpdate() {
+        jpaQueryFactory
+            .update(member)
+            .set(member.username, "비회원")
+            .where(member.age.lt(28))
+            .execute()
+
+        // Persistence Context 비운다
+        with(entityManager) {
+            flush()
+            clear()
+        }
+
+        // Persistence Context 에는 업데이트가 안되어 있다.
+        jpaQueryFactory
+            .selectFrom(member)
+            .fetch()
+            .forEach { println(it) }
+    }
+
+    @Test
+    fun bulkAdd() {
+        jpaQueryFactory
+            .update(member)
+            .set(member.age, member.age.add(1))
+            .execute()
+    }
+
+    @Test
+    fun bulkDelete() {
+        jpaQueryFactory
+            .delete(member)
+            .where(member.age.gt(18))
+            .execute()
+    }
+
 }
