@@ -4,7 +4,9 @@ import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.ExpressionUtils
+import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.Projections
+import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
@@ -581,4 +583,26 @@ class QuerydslBasicTest {
                 .fetch()
         }
 
+    @Test
+    fun dynamicQueryWhereParam() {
+        val result = searchMember2("member1", 10)
+        assertThat(result.size).isEqualTo(1)
+    }
+
+    private fun searchMember2(usernameCond: String?, ageCond: Int?) =
+        jpaQueryFactory
+            .selectFrom(member)
+            // .where(usernameEq(usernameCond), ageEq(ageCond))
+            .where(allEq(usernameCond, ageCond))
+            .fetch()
+
+    private fun usernameEq(usernameCond: String?): BooleanExpression? =
+        usernameCond?.let { member.username.eq(it) }
+
+    private fun ageEq(ageCond: Int?): BooleanExpression? =
+        ageCond?.let { member.age.eq(it) }
+
+    // composite 할 수 있다.
+    private fun allEq(usernameCond: String?, ageCond: Int?): BooleanExpression? =
+        usernameEq(usernameCond)?.and(ageEq(ageCond))
 }
