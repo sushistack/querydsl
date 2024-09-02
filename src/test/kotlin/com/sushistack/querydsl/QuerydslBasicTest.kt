@@ -2,8 +2,11 @@ package com.sushistack.querydsl
 
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
+import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
+import com.sushistack.querydsl.entity.QMember
 import com.sushistack.querydsl.entity.QMember.*
 import com.sushistack.querydsl.entity.QTeam.team
 import com.sushistack.querydsl.entity.Team
@@ -330,5 +333,124 @@ class QuerydslBasicTest {
 
         val loaded = entityManagerFactory.persistenceUnitUtil.isLoaded(mem?.team)
         assertThat(loaded).`as`("페치 조인 적용").isTrue()
+    }
+
+    @Test
+    fun subQuery() {
+        val subMember = QMember("subMember")
+        val mem =jpaQueryFactory
+            .selectFrom(member)
+            .where(member.age.eq(
+                JPAExpressions
+                    .select(subMember.age.max())
+                    .from(subMember)
+            ))
+            .fetchOne()
+
+        assertThat(mem).extracting("age").isEqualTo(40)
+    }
+
+
+    /**
+     * 나이가 평균 나이 이상인 회원  */
+    @Test
+    @Throws(java.lang.Exception::class)
+    fun subQueryGoe() {
+        val memberSub = QMember("memberSub")
+        val result: List<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .where(
+                member.age.goe(
+                    JPAExpressions
+                        .select(memberSub.age.avg())
+                        .from(memberSub)
+                )
+            ).fetch()
+        assertThat(result).extracting("age")
+            .containsExactly(30, 40)
+    }
+
+    /**
+     * 서브쿼리 여러 건 처리, in 사용 */
+    @Test
+    @Throws(java.lang.Exception::class)
+    fun subQueryIn() {
+        val memberSub = QMember("memberSub")
+        val result: List<Member> = jpaQueryFactory
+            .selectFrom(member)
+            .where(
+                member.age.`in`(
+                    JPAExpressions
+                        .select(memberSub.age)
+                        .from(memberSub)
+                        .where(memberSub.age.gt(10))
+                )
+            ).fetch()
+        assertThat(result).extracting("age")
+            .containsExactly(20, 30, 40)
+    }
+
+    @Test
+    fun selectSubQuery() {
+        val memberSub = QMember("memberSub")
+        jpaQueryFactory
+            .select(
+                member.username,
+                JPAExpressions
+                    .select(memberSub.age.avg())
+                    .from(memberSub)
+                )
+            .from(member)
+            .fetch()
+            .forEach { println("tuple := $it") }
+    }
+
+    @Test
+    fun caseStatement1() {
+        val result = jpaQueryFactory
+            .select(
+                member.age
+                    .`when`(10).then("열살")
+                    .`when`(20).then("스무살")
+                    .otherwise("기타")
+            )
+            .from(member)
+            .fetch()
+            .forEach { println("tuple := $it") }
+    }
+
+    @Test
+    fun caseStatement2() {
+        jpaQueryFactory
+            .select(
+                CaseBuilder()
+                    .`when`(member.age.between(0, 20)).then("0 ~ 20살")
+                    .`when`(member.age.between(21, 30)).then("21 ~ 30살")
+                    .otherwise("기타")
+            )
+            .from(member)
+            .fetch()
+            .forEach { println("tuple := $it") }
+    }
+
+    @Test
+    fun caseStatement3() {
+
+        val rankPath = CaseBuilder()
+            .`when`(member.age.between(0, 20)).then(2)
+            .`when`(member.age.between(21, 30)).then(1)
+            .otherwise(3)
+        val result: List<Tuple> = jpaQueryFactory
+            .select(member.username, member.age, rankPath)
+            .from(member)
+            .orderBy(rankPath.desc())
+            .fetch()
+
+        for (tuple in result) {
+            val username = tuple.get(member.username)
+            val age = tuple.get(member.age)
+            val rank = tuple.get(rankPath)
+            println("username = $username age = $age rank = $rank")
+        }
     }
 }
