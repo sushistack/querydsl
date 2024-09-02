@@ -3,6 +3,7 @@ package com.sushistack.querydsl
 import com.querydsl.core.QueryResults
 import com.querydsl.core.Tuple
 import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.sushistack.querydsl.entity.Member
@@ -452,5 +453,23 @@ class QuerydslBasicTest {
             val rank = tuple.get(rankPath)
             println("username = $username age = $age rank = $rank")
         }
+    }
+
+    @Test
+    fun constant() {
+        jpaQueryFactory
+            .select(member.username, Expressions.constant("A"))
+            .from(member)
+            .fetch()
+            .forEach { println("tuple := $it") }
+    }
+
+    @Test
+    fun plus() {
+        jpaQueryFactory
+            .select(member.username.concat("_").concat(member.age.stringValue()))
+            .from(member)
+            .fetchOne()
+            .let { println("tuple := $it") }
     }
 }
