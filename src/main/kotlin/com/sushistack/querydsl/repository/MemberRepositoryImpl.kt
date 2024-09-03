@@ -10,6 +10,8 @@ import jakarta.persistence.EntityManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.support.PageableUtils
+import org.springframework.data.support.PageableExecutionUtils
 
 class MemberRepositoryImpl(
     private val entityManager: EntityManager,
@@ -91,7 +93,7 @@ class MemberRepositoryImpl(
             .limit(pageable.pageSize.toLong())
             .fetch()
 
-        val total = queryFactory
+        val countQuery = queryFactory
             .select(member)
             .from(member)
             .leftJoin(member.team, team)
@@ -99,9 +101,11 @@ class MemberRepositoryImpl(
                 teamNameEq(condition.teamName),
                 ageGoe(condition.ageGoe),
                 ageLoe(condition.ageLoe))
-            .fetchCount()
+            // .fetchCount()
 
-        return PageImpl(content, pageable, total)
+        return PageableExecutionUtils.getPage(content, pageable) { countQuery.fetchCount() }
+
+        // return PageImpl(content, pageable, total)
     }
 
 }
