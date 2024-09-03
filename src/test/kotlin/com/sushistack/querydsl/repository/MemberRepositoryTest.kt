@@ -2,6 +2,7 @@ package com.sushistack.querydsl.repository
 
 import com.sushistack.querydsl.dto.MemberSearchCondition
 import com.sushistack.querydsl.entity.Member
+import com.sushistack.querydsl.entity.QMember.member
 import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
@@ -86,5 +87,10 @@ class MemberRepositoryTest {
         val result = memberRepository.searchPageSimple(cond, pageable)
         assertThat(result.size).isEqualTo(3)
         assertThat(result.content).extracting("username").containsExactly("member1", "member2", "member3")
+    }
+
+    @Test
+    fun querydslPredicateExecutorTest () {
+        memberRepository.findAll(member.username.eq("member1"))
     }
 }
