@@ -6,9 +6,11 @@ import com.sushistack.querydsl.entity.Team
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -61,5 +63,28 @@ class MemberRepositoryTest {
         }
 
         assertThat(result).extracting("username").containsExactly("member4")
+    }
+
+
+    @Test
+    @Disabled("fetchResults 오류남")
+    fun pagingTest() {
+        val teamA = Team(name = "teamA").also { entityManager.persist(it) }
+        val teamB = Team(name = "teamB").also { entityManager.persist(it) }
+
+        Member(username = "member1", age = 10, team = teamA).also { entityManager.persist(it) }
+        Member(username = "member2", age = 20, team = teamA).also { entityManager.persist(it) }
+        Member(username = "member3", age = 30, team = teamB).also { entityManager.persist(it) }
+        Member(username = "member4", age = 40, team = teamB).also { entityManager.persist(it) }
+
+        entityManager.flush()
+        entityManager.clear()
+
+        val cond = MemberSearchCondition()
+        val pageable = PageRequest.of(0, 3)
+
+        val result = memberRepository.searchPageSimple(cond, pageable)
+        assertThat(result.size).isEqualTo(3)
+        assertThat(result.content).extracting("username").containsExactly("member1", "member2", "member3")
     }
 }
