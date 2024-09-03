@@ -40,7 +40,7 @@ class MemberJpaRepositoryTest {
         assertThat(members1).containsExactly(mem)
 
         // val members2 = memberJpaRepository.findByUsername("member1")
-        val members2 = memberJpaRepository.findByUsernameQuerydsl("member1")
+        val members2 = memberJpaRepository.findByUsernameQuerydsl("memberX")
         assertThat(members2).containsExactly(mem)
     }
 
