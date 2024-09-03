@@ -23,7 +23,6 @@ import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.PersistenceContext
 import jakarta.persistence.PersistenceUnit
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.from
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -608,7 +607,7 @@ class QuerydslBasicTest {
         usernameEq(usernameCond)?.and(ageEq(ageCond))
 
     @Test
-    @Commit
+    // @Commit
     fun bulkUpdate() {
         jpaQueryFactory
             .update(member)
