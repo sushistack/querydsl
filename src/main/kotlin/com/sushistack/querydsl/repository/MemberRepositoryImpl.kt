@@ -50,7 +50,7 @@ class MemberRepositoryImpl(
     private fun ageLoe(ageCond: Int?) =
         ageCond?.let { member.age.loe(it) }
 
-    override fun searchPageSimple(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO?> =
+    override fun searchPageSimple(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO> =
         queryFactory
             .select(
                 QMemberTeamDTO(
@@ -72,7 +72,7 @@ class MemberRepositoryImpl(
             .fetchResults()
             .let { PageImpl(it.results, pageable, it.total) }
 
-    override fun searchPageComplex(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO?> {
+    override fun searchPageComplex(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO> {
         val content = queryFactory
             .select(
                 QMemberTeamDTO(

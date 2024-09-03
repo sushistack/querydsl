@@ -7,6 +7,6 @@ import org.springframework.data.domain.Pageable
 
 interface MemberRepositoryCustom {
     fun search(condition: MemberSearchCondition): List<MemberTeamDTO>
-    fun searchPageSimple(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO?>
-    fun searchPageComplex(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO?>
+    fun searchPageSimple(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO>
+    fun searchPageComplex(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDTO>
 }
