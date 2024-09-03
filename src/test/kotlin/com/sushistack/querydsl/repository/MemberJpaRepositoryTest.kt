@@ -58,7 +58,8 @@ class MemberJpaRepositoryTest {
         entityManager.clear()
 
         val result = MemberSearchCondition(teamName = "teamB", ageGoe = 35, ageLoe = 40).let {
-            memberJpaRepository.searchByBuilder(it)
+            // memberJpaRepository.searchByBuilder(it)
+            memberJpaRepository.search(it)
         }
 
         assertThat(result).extracting("username").containsExactly("member4")

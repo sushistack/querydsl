@@ -1,15 +1,12 @@
 package com.sushistack.querydsl.repository
 
 import com.querydsl.core.BooleanBuilder
-import com.querydsl.core.types.dsl.Expressions
+import com.querydsl.core.types.Predicate
 import com.querydsl.jpa.impl.JPAQueryFactory
-import com.sushistack.querydsl.dto.MemberDTO
 import com.sushistack.querydsl.dto.MemberSearchCondition
-import com.sushistack.querydsl.dto.MemberTeamDTO
 import com.sushistack.querydsl.dto.QMemberTeamDTO
 import com.sushistack.querydsl.entity.Member
 import com.sushistack.querydsl.entity.QMember.member
-import com.sushistack.querydsl.entity.QTeam
 import com.sushistack.querydsl.entity.QTeam.*
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
@@ -63,5 +60,36 @@ class MemberJpaRepository(
             .fetch()
     }
 
+    fun search(condition: MemberSearchCondition) =
+        queryFactory
+            .select(
+                QMemberTeamDTO(
+                    member.id.`as`("memberId"),
+                    member.username,
+                    member.age,
+                    team.id.`as`("teamId"),
+                    team.name.`as`("teamName")
+                )
+            )
+            .from(member)
+            .leftJoin(member.team, team)
+            .where(
+                usernameEq(condition.username),
+                teamNameEq(condition.teamName),
+                ageGoe(condition.ageGoe),
+                ageLoe(condition.ageLoe)
+            )
+            .fetch()
 
+    private fun usernameEq(usernameCond: String?) =
+        usernameCond?.let { member.username.eq(it) }
+
+    private fun teamNameEq(teamNameCond: String?) =
+        teamNameCond?.let { member.team.name.eq(it) }
+
+    private fun ageGoe(ageCond: Int?) =
+        ageCond?.let { member.age.goe(it) }
+
+    private fun ageLoe(ageCond: Int?) =
+        ageCond?.let { member.age.loe(it) }
 }
